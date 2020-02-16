@@ -1,92 +1,42 @@
 package cz.brumlamachine.hazard;
 
-import java.util.Objects;
-import java.util.Random;
+import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Ball {
-    private Random random;
-    int randomSpinNumber;
-    int totalNumbers = 36;
-    public boolean odd;
-    public boolean zero;
-    public boolean black;
 
+    private static final int TOTAL_NUMBERS = 36;
 
+    private final SecureRandom random = new SecureRandom();
+    private int currentNumber = -1;
 
-    public int roll(){
-        this.randomSpinNumber = random.nextInt(totalNumbers);
-        return this.randomSpinNumber;
+    public int roll() {
+        this.currentNumber = random.nextInt(TOTAL_NUMBERS);
+        return this.currentNumber;
     }
 
-    public String getColor() {
-        String blackOrRed;
-        zero = false;
-        if ((randomSpinNumber > 0 && randomSpinNumber <= 10) || (randomSpinNumber >= 19 && randomSpinNumber <= 28)) {
-
-            if (randomSpinNumber % 2 == 1) {
-                black = false;
-            } else {
-                black = true;
-            }
-        }
-        if ((randomSpinNumber >= 10 && randomSpinNumber <= 18) || (randomSpinNumber >= 29)) {
-            if (randomSpinNumber % 2 == 1) {
-                black = true;
-            } else {
-                black = false;
-            }
-        }
-        if (randomSpinNumber == 0) {
-            zero = true;
-        }
-        if (black) {
-            blackOrRed= "black";
-        } else {
-            blackOrRed = "red";
-        }
-        if (zero) {
-            blackOrRed = "green";
-        }
-        return blackOrRed;
+    public int getCurrentNumber() {
+        return currentNumber;
     }
 
-    public String getParity() {
-        String oddOrEven;
-        zero = false;
-        if ((randomSpinNumber > 0 && randomSpinNumber <= 10) || (randomSpinNumber >= 19 && randomSpinNumber <= 28)) {
-
-            if (randomSpinNumber % 2 == 1) {
-                odd = true;
-            } else {
-                odd = false;
-            }
+    public boolean checkBet(RouletteBet rouletteBet) {
+        if (currentNumber == -1) {
+            throw new IllegalStateException("Musis nejdriv zavolat roll!");
         }
-        if ((randomSpinNumber >= 10 && randomSpinNumber <= 18) || (randomSpinNumber >= 29)) {
-            if (randomSpinNumber % 2 == 1) {
-                odd = true;
-            } else {
-                odd = false;
-            }
-        }
-        if (randomSpinNumber == 0) {
-            zero = true;
-        }
-        if (odd) {
-            oddOrEven = "odd";
-        } else {
-            oddOrEven = "even";
-        }
-        if (zero) {
-            oddOrEven = "zero";
-        }
-        return oddOrEven;
+        return rouletteBet.getPredicate().test(currentNumber);
     }
 
-    public int getRandomSpinNumber() {
-       return roll();
-    }
-
-    public Ball() {
-        random = new Random();
+    public List<RouletteBet> getWinningBets() {
+        final List<RouletteBet> bets = new ArrayList<>();
+        // check spesl bet
+        for (SpecialBet bet : SpecialBet.values()) {
+            if (checkBet(bet)) {
+                bets.add(bet);
+            }
+        }
+        // num bet
+        bets.add(new NumberBet(currentNumber));
+        return bets;
     }
 }
